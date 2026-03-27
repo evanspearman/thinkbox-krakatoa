@@ -363,13 +363,9 @@ int renderer::get_point_recommended_motion_blur_passes( const frantic::graphics:
     const float taxiDistance = std::abs( difference.x ) + std::abs( difference.y );
     const int pixelDistance = static_cast<int>( std::ceil( m_adaptiveMBlurSmoothness * 0.5f * taxiDistance ) );
 
-    const int rangeLength = m_adaptiveMBlurSampleUpperBound - m_adaptiveMBlurSampleLowerBound;
     if( m_adaptiveMBlurSampleUpperBound == 0 ) {
         return 0;
     }
-
-    const int clampedPixelDistance =
-        boost::algorithm::clamp( pixelDistance, m_adaptiveMBlurSampleLowerBound, m_adaptiveMBlurSampleUpperBound );
 
     const float normalizedDistance = static_cast<float>( pixelDistance - m_adaptiveMBlurSampleLowerBound ) /
                                      static_cast<float>( m_adaptiveMBlurSampleUpperBound );

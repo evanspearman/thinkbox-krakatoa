@@ -11,8 +11,8 @@
 namespace krakatoa {
 
 normal_render_element::normal_render_element( scene_context_ptr context, bool doAntialiasing, bool doScaling )
-    : m_doAntialiasing( doAntialiasing )
-    , m_context( context )
+    : m_context( context )
+    , m_doAntialiasing( doAntialiasing )
     , m_doScaling( doScaling ) {}
 
 normal_render_element::~normal_render_element() {}

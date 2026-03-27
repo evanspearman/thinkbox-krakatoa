@@ -111,11 +111,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1774574148,
-        "narHash": "sha256-plVNvpEhSUE1Z1c1wZ1eoifD6xy7oT4WNIG/nDdnNI8=",
+        "lastModified": 1774583168,
+        "narHash": "sha256-Jhu5cPx54fPyKihtFyw5mQPNq9q6zu1W3Re1USFSPBg=",
         "owner": "evanspearman",
         "repo": "thinkbox-library",
-        "rev": "3576e2a54102470d1b17f67ca57a9382c8269a53",
+        "rev": "4d88dd7364e0a24f61d20fa8f8c350f028ac051a",
         "type": "github"
       },
       "original": {

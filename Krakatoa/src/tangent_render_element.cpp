@@ -11,8 +11,8 @@
 namespace krakatoa {
 
 tangent_render_element::tangent_render_element( scene_context_ptr context, bool doAntialiasing )
-    : m_doAntialiasing( doAntialiasing )
-    , m_context( context ) {}
+    : m_context( context )
+    , m_doAntialiasing( doAntialiasing ) {}
 
 tangent_render_element::~tangent_render_element() {}
 

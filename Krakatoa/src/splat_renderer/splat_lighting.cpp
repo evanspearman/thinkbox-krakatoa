@@ -9,12 +9,12 @@
 
 #include <frantic/particles/particle_utilities.hpp>
 
-#include <tbb/atomic.h>
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_scan.h>
-#include <tbb/tbb_thread.h>
 
-using frantic::graphics::alpha3f;
+#include <atomic>
+#include <thread>
+
 using frantic::graphics::color3f;
 using frantic::graphics::vector3f;
 
@@ -80,9 +80,6 @@ void splat_lighting_impl::add_render_element( renderer::render_element_ptr_type 
 
 namespace {
 class clear_lighting_impl {
-  private:
-    clear_lighting_impl& operator=( const clear_lighting_impl& ) { return *this; } // disabled assignment operator.
-
   public:
     renderer::particle_container_type& m_particles;
     frantic::channels::channel_cvt_accessor<frantic::graphics::color3h> m_lightingAccessor;
@@ -116,15 +113,10 @@ void splat_lighting_impl::compute_particle_lighting( renderer::particle_containe
 
     m_progress->update_progress( 0.f );
 
-    frantic::channels::channel_cvt_accessor<color3f> lightAccessor =
-        particles.get_channel_map().get_cvt_accessor<color3f>( _T("Lighting") );
     frantic::channels::channel_cvt_accessor<float> densityAccessor( 1.f );
 
     if( particles.get_channel_map().has_channel( _T("Density") ) )
         densityAccessor = particles.get_channel_map().get_cvt_accessor<float>( _T("Density") );
-
-    frantic::channels::channel_general_accessor lightGenAccessor =
-        particles.get_channel_map().get_general_accessor( _T("Lighting") );
 
     // Profiling shows that this is actually super slow!!!! Lighting is almost always using half anyways and the
     // conversion was killing me ... better try using memset(). Also: This should be done using tbb::parallel_for() for(
@@ -182,16 +174,16 @@ class compute_lighting_body {
     renderer::particle_container_type* m_particles;
     bool m_useAbsorptionChannel;
 
-    tbb::atomic<std::size_t>* m_progressCounter;
-    tbb::tbb_thread::id m_mainThreadId;
+    std::atomic<std::size_t>* m_progressCounter;
+    std::thread::id m_mainThreadId;
 
     frantic::tstring m_thisLightChannel;
 
   public:
     compute_lighting_body( splat_lighting_impl& lightingEngine, light_object& light,
                            renderer::particle_container_type& particles )
-        : m_lightingEngine( &lightingEngine )
-        , m_light( &light )
+        : m_light( &light )
+        , m_lightingEngine( &lightingEngine )
         , m_particles( &particles ) {
         m_attenMap.set_size( m_light->get_light_impl().shadow_map_size() );
         m_attenMap.fill( renderer::alpha_type( 0 ) );
@@ -200,12 +192,12 @@ class compute_lighting_body {
     }
 
     compute_lighting_body( compute_lighting_body& rhs, tbb::split )
-        : m_lightingEngine( rhs.m_lightingEngine )
-        , m_light( rhs.m_light )
+        : m_light( rhs.m_light )
+        , m_lightingEngine( rhs.m_lightingEngine )
         , m_particles( rhs.m_particles )
-        , m_thisLightChannel( rhs.m_thisLightChannel )
         , m_progressCounter( rhs.m_progressCounter )
-        , m_mainThreadId( rhs.m_mainThreadId ) {
+        , m_mainThreadId( rhs.m_mainThreadId )
+        , m_thisLightChannel( rhs.m_thisLightChannel ) {
         m_attenMap.set_size( m_light->get_light_impl().shadow_map_size() );
         m_attenMap.fill( renderer::alpha_type( 0 ) );
         m_attenMap.set_pixel_lookup_filter( frantic::graphics2d::pixel_lookup_filter::bicubic_filter );
@@ -222,9 +214,9 @@ class compute_lighting_body {
                                                                           m_useAbsorptionChannel, m_thisLightChannel );
         }
 
-        std::size_t count = m_progressCounter->fetch_and_add( range.size() );
+        std::size_t count = m_progressCounter->fetch_add( range.size() );
 
-        if( tbb::this_tbb_thread::get_id() == m_mainThreadId )
+        if( std::this_thread::get_id() == m_mainThreadId )
             m_lightingEngine->m_progress->update_progress( range.size() + count, 2 * m_particles->size() );
     }
 
@@ -237,11 +229,11 @@ class compute_lighting_body {
     }
 
     void compute_lighting() {
-        tbb::atomic<std::size_t> progressCounter;
+        std::atomic<std::size_t> progressCounter;
         progressCounter = 0;
 
         m_progressCounter = &progressCounter;
-        m_mainThreadId = tbb::this_tbb_thread::get_id();
+        m_mainThreadId = std::this_thread::get_id();
 
         tbb::parallel_scan( tbb::blocked_range<std::size_t>( 0, m_particles->size(), 100000 ), *this,
                             tbb::auto_partitioner() );
@@ -360,7 +352,6 @@ void splat_lighting_impl::compute_lighting_pass1( const Range& range,
     const frantic::channels::channel_map& pcm = particles.get_channel_map();
 
     frantic::channels::channel_accessor<vector3f> positionAccessor = pcm.get_accessor<vector3f>( _T("Position") );
-    frantic::channels::channel_cvt_accessor<color3f> lightingAccessor = pcm.get_cvt_accessor<color3f>( _T("Lighting") );
     frantic::channels::channel_cvt_accessor<float> densityAccessor = pcm.get_cvt_accessor<float>( _T("Density") );
 
     frantic::channels::channel_cvt_accessor<color3f> colorAccessor( color3f::white() );
@@ -476,7 +467,7 @@ void splat_lighting_impl::compute_lighting_pass2( const Range& range,
             lighting = m_shader->shade( toEye, toLight, lighting, scatterCoeff, particle );
         } else {
             const boost::int32_t shaderIndex = m_shaderAccessor.get( particle );
-            if( shaderIndex >= 0 && shaderIndex < m_shaders.size() ) {
+            if( shaderIndex >= 0 && static_cast<std::size_t>( shaderIndex ) < m_shaders.size() ) {
                 lighting = m_shaders[shaderIndex]->shade( toEye, toLight, lighting, scatterCoeff, particle );
             } else {
                 lighting = m_shader->shade( toEye, toLight, lighting, scatterCoeff, particle );
@@ -500,7 +491,6 @@ void splat_lighting_impl::compute_deep_attenuation( light_object& light,
     const frantic::channels::channel_map& pcm = particles.get_channel_map();
 
     frantic::channels::channel_accessor<vector3f> positionAccessor = pcm.get_accessor<vector3f>( _T("Position") );
-    frantic::channels::channel_cvt_accessor<color3f> lightingAccessor = pcm.get_cvt_accessor<color3f>( _T("Lighting") );
     frantic::channels::channel_cvt_accessor<float> densityAccessor = pcm.get_cvt_accessor<float>( _T("Density") );
 
     frantic::channels::channel_cvt_accessor<color3f> colorAccessor( color3f::white() );

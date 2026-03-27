@@ -15,9 +15,6 @@
  * .cpp of client classes.
  */
 
-#pragma warning( push )
-#pragma warning( disable : 4505 )
-
 namespace krakatoa {
 
 template <class BaseClass>
@@ -63,5 +60,3 @@ class render_element : public BaseClass {
 };
 
 } // namespace krakatoa
-
-#pragma warning( pop )

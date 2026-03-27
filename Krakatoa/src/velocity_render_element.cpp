@@ -12,11 +12,11 @@ namespace krakatoa {
 
 velocity_render_element::velocity_render_element( scene_context_ptr context, bool doAntialiasing, float frameRate,
                                                   bool applyMaxVelocity, float maxVelocity )
-    : m_doAntialiasing( doAntialiasing )
-    , m_frameRate( frameRate )
+    : m_context( context )
+    , m_doAntialiasing( doAntialiasing )
     , m_applyMaxVelocity( applyMaxVelocity )
     , m_maxVelocity( maxVelocity )
-    , m_context( context ) {
+    , m_frameRate( frameRate ) {
     m_worldToCameraDeriv.set_to_zero();
 }
 

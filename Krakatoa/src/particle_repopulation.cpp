@@ -13,7 +13,6 @@
 #include <krakatoa/particle_volume.hpp>
 
 #include <boost/bind.hpp>
-#include <tbb/task_scheduler_init.h>
 
 using namespace frantic::particles::streams;
 
@@ -27,8 +26,6 @@ create_particle_repopulation_istream( boost::shared_ptr<particle_istream> pin, f
     // if it's an empty stream, or does not have a "Position" channel, we don't have to do anything.
     if( pin->particle_count() == 0 || !pin->get_native_channel_map().has_channel( _T("Position") ) )
         return pin;
-
-    tbb::task_scheduler_init tbbInit;
 
     densityFalloffStart = frantic::math::clamp( densityFalloffStart, 0.0f, 1.0f ); // sanity check input.
 

@@ -14,10 +14,10 @@ using namespace krakatoa;
 channel_render_element::channel_render_element( bool antiAlias, const frantic::tstring& channelName,
                                                 frantic::channels::data_type_t type, std::size_t arity,
                                                 const frantic::graphics::color3f& def )
-    : m_antiAlias( antiAlias )
-    , m_channelName( channelName )
+    : m_channelName( channelName )
     , m_type( type )
     , m_arity( arity )
+    , m_antiAlias( antiAlias )
     , m_default( def ) {}
 
 channel_render_element::~channel_render_element() {}

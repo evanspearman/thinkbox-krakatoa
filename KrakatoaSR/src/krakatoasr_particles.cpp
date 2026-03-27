@@ -431,8 +431,8 @@ particle_stream particle_stream::create_from_fractals( INT64 particleCount, cons
 
     boost::shared_ptr<streams::particle_istream> outputStream;
 
-    int numTMs = (int)params.position.size();
-    int numColors = (int)params.colors.size();
+    std::size_t numTMs = params.position.size();
+    std::size_t numColors = params.colors.size();
 
     // error check the inputs
     if( params.rotation.size() != numTMs || params.scale.size() != numTMs || params.skewOrientation.size() != numTMs ||
@@ -462,7 +462,7 @@ particle_stream particle_stream::create_from_fractals( INT64 particleCount, cons
 
     FF_LOG( debug ) << "Generating particles from " << numTMs << " affine transformations:" << std::endl;
 
-    for( int i = 0; i < numTMs; ++i ) {
+    for( std::size_t i = 0; i < numTMs; ++i ) {
 
         FF_LOG( debug ) << "Affine transformation #" << i + 1 << " position: " << to_tstring( params.position[i].str() )
                         << std::endl;
@@ -540,7 +540,7 @@ particle_stream particle_stream::create_from_fractals( INT64 particleCount, cons
 
         // construct a map of color gradients
         std::map<float, vector3f> colorGradientMap;
-        for( int i = 0; i < numColors; ++i ) {
+        for( std::size_t i = 0; i < numColors; ++i ) {
             float pos = params.colorPositions[i];
             colorGradientMap[pos] = params.colors[i];
         }
@@ -679,7 +679,7 @@ void create_vector_magnitude_channel( particle_stream& stream, const char* destC
                                "magnitude requires the destination be a floating point channel.\n";
             sanityCheckFailed = true;
         }
-        if( existingArity != destChannelArity ) {
+        if( existingArity != static_cast<std::size_t>( destChannelArity ) ) {
             FF_LOG( error ) << "create_vector_magnitude_channel: The channel \"" << destChannelName
                             << "\" already exists in the stream, however, the output arity requested is "
                             << destChannelArity << " and the arity of the existing channel is " << existingArity

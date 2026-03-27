@@ -10,11 +10,9 @@
 #include <frantic/graphics/motion_blurred_transform.hpp>
 #include <frantic/graphics2d/framebuffer.hpp>
 #include <frantic/rendering/framebuffer_cubeface.hpp>
-#pragma warning( push, 3 )
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
-#pragma warning( pop )
 
 namespace krakatoa {
 
@@ -179,6 +177,8 @@ class matte_primitive {
         : m_currentTime( 0.5f ) {}
 
   public:
+    virtual ~matte_primitive() = default;
+
     float get_time() const { return m_currentTime; }
 
     /**

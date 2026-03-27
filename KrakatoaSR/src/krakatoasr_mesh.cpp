@@ -72,7 +72,7 @@ void triangle_mesh::set_vertex_velocity( int vertexIndex, float vx, float vy, fl
 void triangle_mesh::set_vertex_velocity_data( const float* vertexVelocityData ) {
     initialize_velocity();
     size_t vertCount = m_data->mesh->vertex_count();
-    for( int i = 0; i < vertCount; ++i )
+    for( std::size_t i = 0; i < vertCount; ++i )
         m_data->velocityAcc[i].set( vertexVelocityData[i * 3], vertexVelocityData[i * 3 + 1],
                                     vertexVelocityData[i * 3 + 2] );
 }
@@ -151,7 +151,7 @@ void triangle_mesh::initialize_velocity() {
             trimesh3_vertex_channel_accessor<vector3f> acc =
                 m_data->mesh->get_vertex_channel_accessor<vector3f>( _T( "Velocity" ) );
             size_t vertCount = m_data->mesh->vertex_count();
-            for( int i = 0; i < vertCount; ++i )
+            for( std::size_t i = 0; i < vertCount; ++i )
                 acc[i].set( 0.0f );
         }
         m_data->velocityAcc = m_data->mesh->get_vertex_channel_accessor<vector3f>( _T( "Velocity" ) );

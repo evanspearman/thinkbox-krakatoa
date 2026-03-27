@@ -10,17 +10,14 @@
 #include <frantic/graphics/plane3f.hpp>
 #include <frantic/graphics/vector4f.hpp>
 
-#pragma warning( push, 3 )
 #include <boost/function.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
-#pragma warning( pop )
 
 using namespace frantic::geometry;
 using namespace frantic::graphics;
 using namespace frantic::graphics2d;
-using frantic::rendering::framebuffer_cubeface;
 
 typedef boost::function<float( const raytrace_intersection& )> opacity_shader;
 

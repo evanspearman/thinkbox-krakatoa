@@ -299,7 +299,7 @@ void krakatoa_renderer::add_particle_stream( particle_stream stream ) {
                                   "by using the \"create_from\" member functions in the particle_stream class." );
     }
     // see if this stream already exists in the renderer.
-    for( int i = 0; i < m_data->particles.size(); ++i ) {
+    for( std::size_t i = 0; i < m_data->particles.size(); ++i ) {
         if( m_data->particles[i].get_data()->stream == stream.get_data()->stream )
             throw std::runtime_error(
                 "This particle stream has already been added to the renderer object. Streams can only be added once. "

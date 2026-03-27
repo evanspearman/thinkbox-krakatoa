@@ -39,8 +39,6 @@
 #include <frantic/rendering/lights/spotlight.hpp>
 
 #include <tbb/parallel_for.h>
-#include <tbb/task_scheduler_init.h>
-#include <tbb/tbb_exception.h>
 
 using namespace frantic::graphics;
 using namespace frantic::graphics2d;
@@ -108,6 +106,7 @@ class krakatoasr_matte_primitive : public krakatoa::matte_primitive {
         m_currentShutterTime = 0.0f;
         m_shutterTimeIsValid = false; // set_time needs to be called before we can use this mesh. ok?
     }
+    virtual ~krakatoasr_matte_primitive() = default;
     virtual void set_time( float motionSegmentTime ) {
         krakatoa::matte_primitive::set_time( motionSegmentTime ); // needed
         m_currentShutterTime =
@@ -297,7 +296,7 @@ void retrieve_particles( krakatoa_renderer_params& params, krakatoa::renderer::p
 
     // add transformation stream. this could not be done originally, because we didn't know what shutterBegin or
     // shutterEnd would be at render time.
-    for( int i = 0; i < params.particles.size(); ++i ) {
+    for( std::size_t i = 0; i < params.particles.size(); ++i ) {
         krakatoasr::particle_stream_data* streamData = params.particles[i].get_data();
 
         // get the base transformation matrix
@@ -384,7 +383,7 @@ void retrieve_particles( krakatoa_renderer_params& params, krakatoa::renderer::p
     bool hasUnknownParticleCountStream = false;
 
     // go though each of the streams and do a particle count
-    for( int i = 0; i < params.particles.size(); ++i ) {
+    for( std::size_t i = 0; i < params.particles.size(); ++i ) {
         boost::shared_ptr<particle_istream> pin = params.particles[i].get_data()->stream;
 
         listOfStreams.push_back( pin );
@@ -685,8 +684,6 @@ void write_particles( const krakatoa::renderer::particle_container_type& parray,
 }
 
 void render_scene_internal( krakatoa_renderer_params& params ) {
-    tbb::task_scheduler_init scheduler;
-
     // this is the object that handles displaying progress updates, frame buffer updates, and handling throwing "cancel"
     // exceptions (caught by calling function)
     boost::shared_ptr<krakatoasr_progress_logger> renderProgress( new krakatoasr_progress_logger(
@@ -942,7 +939,7 @@ void render_scene_internal( krakatoa_renderer_params& params ) {
         renderMode = krakatoa::renderer::mode_type::additive;
 
     // add matte meshes to the renderer
-    for( int i = 0; i < params.meshes.size(); ++i ) {
+    for( std::size_t i = 0; i < params.meshes.size(); ++i ) {
         boost::shared_ptr<krakatoa::matte_primitive> matteMesh( new detail::krakatoasr_matte_primitive(
             params.meshes[i].first, params.meshes[i].second, params.shutterBegin, params.shutterEnd ) );
         sceneContext->add_matte_object( matteMesh );
@@ -1234,17 +1231,6 @@ bool render_scene( krakatoa_renderer_params& params ) {
     } catch( frantic::logging::progress_cancel_exception& e ) {
         FF_LOG( debug ) << e.what() << std::endl;
         isCancelled = true;
-    } catch( tbb::captured_exception& e ) {
-        // this is a little bit hacky, but it's a neccessary consequence of throwing exceptions inside tbb handled code
-        if( std::string( e.name() ) == typeid( frantic::logging::progress_cancel_exception ).name() ) {
-            FF_LOG( debug ) << e.what() << std::endl;
-            isCancelled = true;
-        } else {
-            // otherwise, re-throw it as a standard runtime error, we'll lose the runtime type, but that's the best we
-            // can do
-            params.particles.clear(); // must clear
-            throw std::runtime_error( e.what() );
-        }
     } catch( std::exception& e ) {
         params.particles.clear(); // must clear
         throw;
@@ -1257,8 +1243,6 @@ bool render_scene( krakatoa_renderer_params& params ) {
 boost::shared_ptr<krakatoa::raytrace_renderer::raytrace_renderer>
 setup_raytrace_renderer( krakatoa_renderer_params& params,
                          krakatoa::renderer::particle_container_type& particleBuffer ) {
-    tbb::task_scheduler_init scheduler;
-
     // this is the object that handles displaying progress updates, frame buffer updates, and handling throwing "cancel"
     // exceptions (caught by calling function)
     boost::shared_ptr<krakatoasr_progress_logger> renderProgress( new krakatoasr_progress_logger(

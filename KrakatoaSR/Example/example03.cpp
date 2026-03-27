@@ -11,7 +11,6 @@ EXAMPLE 3
 
 #include <iostream>
 #include <krakatoasr_renderer.hpp>
-#include <random>
 
 // this is a custom stream of particles which currently creates a square of particles
 class my_stream : public krakatoasr::particle_stream_interface {
@@ -40,8 +39,8 @@ class my_stream : public krakatoasr::particle_stream_interface {
         // check if we have any more particles to emit
         if( m_currentParticle < m_particleCount ) {
             // the particles will be in a 1X1X1 square centered on the origin
-            float myPosition[3] = { ( (float)rand() / RAND_MAX ) - 0.5, ( (float)rand() / RAND_MAX ) - 0.5,
-                                    ( (float)rand() / RAND_MAX ) - 0.5 };
+            float myPosition[3] = { ( (float)rand() / RAND_MAX ) - 0.5f, ( (float)rand() / RAND_MAX ) - 0.5f,
+                                    ( (float)rand() / RAND_MAX ) - 0.5f };
             // the particles will not be moving
             float myVelocity[3] = { 0.0f, 0.0f, 0.0f };
             // the particles will be white, however because of the light we are using they will appear yellow

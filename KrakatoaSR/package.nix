@@ -56,6 +56,7 @@ stdenv.mkDerivation {
 
   cmakeFlags = [
     "-DCMAKE_BUILD_TYPE=Release"
+    "-DCMAKE_PREFIX_PATH=${thinkboxlibrary};${krakatoa}"
   ];
 
   meta = with lib; {

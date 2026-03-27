@@ -8,9 +8,7 @@
 #include <frantic/volumetrics/levelset/rle_level_set.hpp>
 #include <frantic/volumetrics/voxel_sampler_interface.hpp>
 
-#pragma warning( push, 3 )
 #include <boost/random.hpp>
-#pragma warning( pop )
 
 namespace krakatoa {
 
@@ -99,7 +97,6 @@ class particle_volume_voxel_sampler : public frantic::volumetrics::voxel_sampler
      * TODO: Try the MurmurHash hashing function, which is apparently faster.
      */
     inline static boost::uint32_t hash( int x, int y, int z ) {
-        static const boost::uint32_t FNV_PRIME = 16777619;
         static const boost::uint32_t FNV_OFFSET = 2166136261;
 
         boost::uint32_t hash = FNV_OFFSET;

@@ -8,15 +8,14 @@
 
 #include <OpenImageIO/imageio.h>
 
-#pragma warning( push, 3 )
-#pragma warning( disable : 4996 )
 #include <ImfChannelList.h>
+#include <ImfFrameBuffer.h>
 #include <ImfHeader.h>
 #include <ImfInputFile.h>
 #include <ImfOutputFile.h>
-#pragma warning( pop )
+#include <ImfTiledOutputFile.h>
 
-#include <iomanip>
+#include <list>
 
 using namespace frantic::graphics;
 
@@ -575,7 +574,7 @@ void save_tiled_multi_channel_exr_file( const multi_channel_exr_file_saver_data&
 void save_image_file( const file_saver_data& saverData, int width, int height, int imageCount,
                       const output_type_t* listOfTypes, const frame_buffer_pixel_data* const* listOfImages ) {
 
-    for( size_t i = 0; i < imageCount; ++i ) {
+    for( int i = 0; i < imageCount; ++i ) {
 
         output_type_t imageType = listOfTypes[i];
         const frame_buffer_pixel_data* imageData = listOfImages[i];
@@ -729,7 +728,8 @@ void read_non_exr( const std::string& filename, std::vector<float>& outBuffer, f
     const OIIO::ImageSpec& specification = in->spec();
     outSize = frantic::graphics2d::size2( specification.width, specification.height );
     outBuffer.resize( outSize.area() * specification.nchannels );
-    in->read_image( OIIO::TypeDesc::FLOAT, outBuffer.data() );
+    const auto& spec = in->spec();
+    in->read_image( 0, 0, 0, spec.nchannels, OIIO::TypeDesc::FLOAT, outBuffer.data() );
     in->close();
 }
 

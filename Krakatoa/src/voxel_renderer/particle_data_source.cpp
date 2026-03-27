@@ -2,14 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "stdafx.h"
 
-#pragma warning( push, 3 )
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
 #include <tbb/spin_mutex.h>
 #include <tbb/task.h>
 
 #include <boost/random.hpp>
-#pragma warning( pop )
 #include <boost/math/special_functions/fpclassify.hpp>
 
 #include <frantic/channels/property_map.hpp>
@@ -21,7 +19,6 @@
 #include <krakatoa/voxel_renderer/slice_container.hpp>
 #include <krakatoa/voxel_renderer/slice_coordsys.hpp>
 
-using frantic::graphics::color3f;
 using frantic::graphics::vector3f;
 
 #include <frantic/diagnostics/profiling_section.hpp>
@@ -111,8 +108,6 @@ class particle_compare {
 std::pair<int, int> particle_data_source::reset( coordsys_ptr coordSys ) {
     m_coordSys = coordSys;
 
-    frantic::graphics::vector3f dir =
-        vector3f::normalize( coordSys->transform_vector_to_world( vector3f( 0, 0, -1 ) ) );
     particle_compare func( coordSys, m_particles->get_channel_map(), m_mblurTimeSeconds );
     // frantic::sort::threaded_sort( m_particles->begin(), m_particles->end(), func, m_disableThreading );
 

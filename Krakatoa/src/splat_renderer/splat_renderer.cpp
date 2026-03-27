@@ -25,18 +25,14 @@
 #include <krakatoa/threading_functions.hpp>
 #include <krakatoa/zdepth_render_element.hpp>
 
-#pragma warning( push, 3 )
-#pragma warning( disable : 4512 4100 )
-#include <tbb/atomic.h>
 #include <tbb/blocked_range.h>
 #include <tbb/concurrent_hash_map.h>
-#include <tbb/tbb_thread.h>
 #include <tbb/parallel_reduce.h>
+#include <tbb/parallel_for.h>
 
 using frantic::graphics::alpha3f;
 using frantic::graphics::color3f;
 using frantic::graphics::transform4f;
-using frantic::graphics::vector3;
 using frantic::graphics::vector3f;
 
 using frantic::graphics2d::vector2;
@@ -97,13 +93,13 @@ class splat_renderer_impl : public splat_renderer {
                                      parallel_render_progress_logger_master* masterLogger,
                                      const boost::shared_array<std::size_t> partitionSizes )
             : m_renderer( &renderer )
-            , m_rng( rng_gen_type( seed ), rng_range_type() )
             , m_seed( seed )
+            , m_rng( rng_gen_type( seed ), rng_range_type() )
             , m_masterLogger( masterLogger )
             , m_partitionStarts( partitionSizes ) {}
 
-        void render_subinterval( std::size_t threadCount, render_element_container_type& renderElements,
-                                 render_element_interface_ptr occludedElement, bool withThreads = true ) {
+        void render_subinterval( std::size_t threadCount, [[maybe_unused]] render_element_container_type& renderElements,
+                                 [[maybe_unused]] render_element_interface_ptr occludedElement, bool withThreads = true ) {
             if( withThreads ) {
                 m_numThreads = threadCount;
 
@@ -150,16 +146,16 @@ class splat_renderer_impl : public splat_renderer {
 
         parallel_particle_weighting_body( std::size_t threadCount, const splat_renderer_impl* renderer,
                                           std::vector<std::size_t>& samplesPerParticle )
-            : m_threadCount( threadCount )
+            : m_totalSamples( 0 )
+            , m_threadCount( threadCount )
             , m_renderer( renderer )
-            , m_samplesPerParticle( samplesPerParticle )
-            , m_totalSamples( 0 ) {}
+            , m_samplesPerParticle( samplesPerParticle ) {}
 
         parallel_particle_weighting_body( parallel_particle_weighting_body& other, tbb::split )
-            : m_threadCount( other.m_threadCount )
+            : m_totalSamples( 0 )
+            , m_threadCount( other.m_threadCount )
             , m_renderer( other.m_renderer )
-            , m_samplesPerParticle( other.m_samplesPerParticle )
-            , m_totalSamples( 0 ) {}
+            , m_samplesPerParticle( other.m_samplesPerParticle ) {}
 
         ~parallel_particle_weighting_body() {}
 
@@ -663,7 +659,7 @@ void splat_renderer_impl::render_subinterval( image_type& outImage, int seed ) {
     parallel_render_subinterval fn( *this, seed, &masterLogger, partitionStarts );
 
     // Create copies of the frame buffers for each channel for each thread
-    for( int i = 0; i < threadCount; ++i ) {
+    for( std::size_t i = 0; i < threadCount; ++i ) {
         renderer::image_type frameBuffer;
         m_frameBuffers.push_back( frameBuffer );
         m_frameBuffers[i].set_size( outImage.size() );
@@ -684,7 +680,7 @@ void splat_renderer_impl::render_subinterval( image_type& outImage, int seed ) {
     fn.render_subinterval( threadCount, m_renderElements, m_behindMatteElement, !m_disableThreading );
 
     // Merge the copies of the frame buffers for each thread back into the originals
-    for( int i = 0; i < threadCount; ++i ) {
+    for( std::size_t i = 0; i < threadCount; ++i ) {
         outImage.blend_over( m_frameBuffers[i] );
         m_frameBuffers[i].clear();
         if( m_behindMatteElement ) {
@@ -1004,10 +1000,10 @@ class jittered_mblur_sort_op {
     jittered_mblur_sort_op( float defaultTime, float mblurBias, float mblurDurationSeconds, bool isJittered,
                             const frantic::channels::channel_map& map,
                             const frantic::graphics::camera<float>& theCamera )
-        : m_camera( &theCamera )
-        , m_timeAccessor( defaultTime )
-        , m_mblurBias( mblurBias )
+        : m_mblurBias( mblurBias )
         , m_mblurDurationSeconds( mblurDurationSeconds )
+        , m_camera( &theCamera )
+        , m_timeAccessor( defaultTime )
         , m_wideSpherical( m_camera->projection_mode() == frantic::graphics::projection_mode::spherical &&
                            ( m_camera->vertical_fov() >= boost::math::constants::pi<float>() ||
                              m_camera->horizontal_fov() >= boost::math::constants::pi<float>() ) )

@@ -214,8 +214,8 @@ birth_channel_gen::detail::yes_no_all( const frantic::tstring& question ) {
     std::cout << "Enter 'a' or 'A' for yes, anything else will be considered no." << std::endl;
     std::cin >> allAnswer;
 
-    std::tolower( answer );
-    std::tolower( allAnswer );
+    answer = std::tolower( answer );
+    allAnswer = std::tolower( allAnswer );
 
     if( answer == 'y' ) {
         if( allAnswer == 'a' ) {

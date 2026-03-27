@@ -13,11 +13,11 @@ namespace krakatoa {
 
 zdepth_render_element::zdepth_render_element( scene_context_ptr context, bool doAntialiasing, bool applyDepthRange,
                                               float minDepth, float maxDepth )
-    : m_doAntialiasing( doAntialiasing )
+    : m_context( context )
+    , m_doAntialiasing( doAntialiasing )
     , m_applyDepthRange( applyDepthRange )
     , m_minDepth( minDepth )
-    , m_maxDepth( maxDepth )
-    , m_context( context ) {}
+    , m_maxDepth( maxDepth ) {}
 
 zdepth_render_element::~zdepth_render_element() {}
 

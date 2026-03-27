@@ -19,20 +19,15 @@
 #include <krakatoa/splat_renderer/splat_renderer.hpp>
 #include <krakatoa/threading_functions.hpp>
 
-#pragma warning( push, 3 )
-#pragma warning( disable : 4512 4100 )
-#include <tbb/atomic.h>
 #include <tbb/blocked_range.h>
 #include <tbb/concurrent_hash_map.h>
-#include <tbb/tbb_thread.h>
+#include <oneapi/tbb/partitioner.h>
 
 using frantic::graphics::alpha3f;
 using frantic::graphics::color3f;
 using frantic::graphics::transform4f;
-using frantic::graphics::vector3;
 using frantic::graphics::vector3f;
 
-using frantic::graphics2d::vector2;
 using frantic::graphics2d::vector2f;
 
 namespace krakatoa {
@@ -87,21 +82,21 @@ class splat_cube_renderer_impl : public splat_renderer {
 
       public:
         parallel_render_subinterval( splat_cube_renderer_impl& renderer, int seed,
-                                     parallel_render_progress_logger_master* masterLogger )
+                                     [[maybe_unused]] parallel_render_progress_logger_master* masterLogger )
             : m_renderer( &renderer )
-            , m_rng( rng_gen_type( seed ), rng_range_type() )
             , m_seed( seed )
+            , m_rng( rng_gen_type( seed ), rng_range_type() )
             , m_masterLogger( NULL ) {}
 
-        void render_subinterval( std::size_t threadCount, render_element_container_type& renderElements,
-                                 render_element_interface_ptr occludedElement, bool withThreads = true ) {
+        void render_subinterval( std::size_t threadCount, [[maybe_unused]] render_element_container_type& renderElements,
+                                 [[maybe_unused]] render_element_interface_ptr occludedElement, bool withThreads = true ) {
             if( withThreads ) {
                 m_numThreads = threadCount;
                 // This parallel_for absolutely MUST use tbb::simple_partitioner with grainsize = 1
                 // We are calculating the range of particles to render manually so the number of threads calling
                 // operator() must be deterministic and must be >= threadCount
-                tbb::parallel_for( tbb::blocked_range<std::size_t>( 0, threadCount, 1 ), *this,
-                                   tbb::simple_partitioner() );
+                // tbb::parallel_for( tbb::blocked_range<std::size_t>( 0, threadCount, 1 ), *this,
+                //                    tbb::simple_partitioner() );
             } else {
                 m_numThreads = 1;
                 ( *this )( tbb::blocked_range<std::size_t>( 0, 1, 1 ) );
@@ -506,7 +501,7 @@ void splat_cube_renderer_impl::render_subinterval( image_type& outImage, int see
                          sizeof( pixel_type ), 100.0f, m_renderingThreadLimit );
 
     // Create copies of the frame buffers for each channel for each thread
-    for( int i = 0; i < threadCount; ++i ) {
+    for( std::size_t i = 0; i < threadCount; ++i ) {
         renderer::image_type frameBuffer;
         m_frameBuffers.push_back( frameBuffer );
         m_frameBuffers[i].set_size( outImage.size() );
@@ -526,7 +521,7 @@ void splat_cube_renderer_impl::render_subinterval( image_type& outImage, int see
     fn.render_subinterval( threadCount, m_renderElements, m_behindMatteElement, !m_disableThreading );
 
     // Merge the copies of the frame buffers for each thread back into the originals
-    for( int i = 0; i < threadCount; ++i ) {
+    for( std::size_t i = 0; i < threadCount; ++i ) {
         outImage.blend_over( m_frameBuffers[i] );
         m_frameBuffers[i].clear();
         if( m_behindMatteElement ) {
@@ -777,10 +772,10 @@ class jittered_mblur_sort_op {
     jittered_mblur_sort_op( float defaultTime, float mblurBias, float mblurDurationSeconds, bool isJittered,
                             const frantic::channels::channel_map& map,
                             const frantic::graphics::camera<float>& theCamera )
-        : m_camera( &theCamera )
-        , m_timeAccessor( defaultTime )
-        , m_mblurBias( mblurBias )
-        , m_mblurDurationSeconds( mblurDurationSeconds ) {
+        : m_mblurBias( mblurBias )
+        , m_mblurDurationSeconds( mblurDurationSeconds )
+        , m_camera( &theCamera )
+        , m_timeAccessor( defaultTime ) {
         m_posAccessor = map.get_accessor<vector3f>( _T("Position") );
         m_velAccessor = map.get_cvt_accessor<vector3f>( _T("Velocity") );
 

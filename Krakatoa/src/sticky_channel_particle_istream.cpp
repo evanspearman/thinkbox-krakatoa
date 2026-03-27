@@ -9,11 +9,11 @@ stickychannel_particle_istream::stickychannel_particle_istream(
     std::map<boost::int64_t, boost::shared_array<char>>& birthValues, const frantic::tstring& sourceChannel,
     const frantic::tstring& destChannel, const frantic::tstring& idChannel, size_t bufferSize )
     : m_delegate( pin )
-    , m_birthValues( birthValues )
+    , m_idChannelName( idChannel )
     , m_sourceChannelName( sourceChannel )
     , m_destinationChannelName( destChannel )
-    , m_idChannelName( idChannel )
-    , m_bufferedParticlesIndex( std::numeric_limits<size_t>::max() ) {
+    , m_bufferedParticlesIndex( std::numeric_limits<size_t>::max() )
+    , m_birthValues( birthValues ) {
     FF_LOG( debug ) << "Adding birth channel evaluation to stream named \"" << m_delegate->name() << "\".\n";
 
     m_currentBufferSize = 0;
@@ -22,8 +22,6 @@ stickychannel_particle_istream::stickychannel_particle_istream(
 
     // determine buffer size (normally it's user-inputted)
     m_maxBufferSize = std::min( (boost::int64_t)bufferSize, m_delegate->particle_count() );
-    if( m_maxBufferSize == -1 )
-        m_maxBufferSize = bufferSize;
 
     init_channel_map( m_delegate->get_channel_map() );
 }

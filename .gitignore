@@ -1,2 +1,6 @@
 Krakatoa/build
 KrakatoaSR/build
+Krakatoa/.cache
+Krakatoa/compile_commands.json
+KrakatoaSR/.cache
+KrakatoaSR/compile_commands.json

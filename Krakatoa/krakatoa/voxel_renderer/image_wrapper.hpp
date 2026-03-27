@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 #pragma once
 
+#include<frantic/graphics2d/size2.hpp>
+
 namespace krakatoa {
 namespace voxel_renderer {
 
@@ -25,8 +27,8 @@ class image_wrapper {
 
   public:
     image_wrapper( const frantic::graphics2d::size2 imageSize )
-        : m_ownsData( false )
-        , m_pData( NULL ) {
+        : m_pData( NULL )
+        , m_ownsData( false ) {
         reset( imageSize );
     }
 

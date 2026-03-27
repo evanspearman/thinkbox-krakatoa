@@ -116,8 +116,6 @@ std::size_t krakatoa::get_total_physical_memory() {
 }
 
 std::size_t krakatoa::get_available_physical_memory() {
-
-    std::size_t totalPhysicalMemory = get_total_physical_memory();
     std::size_t availablePhysicalMemory = 0;
 
 #if defined( _WIN32 )
@@ -131,6 +129,7 @@ std::size_t krakatoa::get_available_physical_memory() {
     availablePhysicalMemory = static_cast<std::size_t>( sysconf( _SC_AVPHYS_PAGES ) ) * pageSize;
 
 #elif defined( __APPLE__ )
+    std::size_t totalPhysicalMemory = get_total_physical_memory();
     const std::size_t totalPhysicalInGigabytes = ( ( totalPhysicalMemory / 1024 ) / 1024 ) / 1024;
     if( totalPhysicalInGigabytes < 9 ) {
         availablePhysicalMemory = totalPhysicalMemory / 4;

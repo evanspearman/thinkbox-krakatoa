@@ -45,6 +45,7 @@
             pkgs.just
           ];
           shellHook = ''
+            export CMAKE_PREFIX_PATH="${krakatoa}:${thinkboxlibrary}:$CMAKE_PREFIX_PATH"
             export CC="${llvm.clang}/bin/clang"
             export CXX="${llvm.clang}/bin/clang++"
             export CXXFLAGS="-fcolor-diagnostics"

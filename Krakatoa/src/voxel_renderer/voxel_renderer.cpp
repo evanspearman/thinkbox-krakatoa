@@ -6,11 +6,9 @@
 #include <boost/bind.hpp>
 #include <boost/call_traits.hpp>
 
-#pragma warning( push, 3 )
 #include <tbb/blocked_range2d.h>
 #include <tbb/parallel_for.h>
 #include <tbb/spin_mutex.h>
-#pragma warning( pop )
 
 #include <frantic/diagnostics/profiling_section.hpp>
 #include <frantic/graphics2d/boundrect2.hpp>
@@ -47,7 +45,6 @@ using frantic::graphics::alpha3f;
 using frantic::graphics::color3f;
 using frantic::graphics::vector3f;
 using frantic::graphics2d::boundrect2;
-using frantic::graphics2d::vector2;
 using frantic::graphics2d::vector2f;
 
 extern frantic::diagnostics::profiling_section g_voxelIndexCreation;
@@ -1953,9 +1950,9 @@ class coverage_shader {
 
   public:
     coverage_shader( int* rayData, frantic::graphics2d::size2 rayDataSize, int sliceId )
-        : m_rayData( rayData )
-        , m_rayDataSize( rayDataSize )
-        , m_sliceId( sliceId ) {}
+        : m_sliceId( sliceId )
+        , m_rayData( rayData )
+        , m_rayDataSize( rayDataSize ) {}
 
     int get_buffer_width() const { return m_rayDataSize.xsize; }
     int get_buffer_height() const { return m_rayDataSize.ysize; }

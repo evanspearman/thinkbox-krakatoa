@@ -9,7 +9,7 @@ project(KrakatoaSR LANGUAGES CXX)
 set(KRAKATOASR_LIBRARY_TYPE "SHARED" CACHE STRING "Either SHARED or STATIC")
 set_property(CACHE KRAKATOASR_LIBRARY_TYPE PROPERTY STRINGS SHARED STATIC)
 
-option(BUILD_EXAMPLES "Build the KrakatoaSR examples" OFF)
+option(BUILD_EXAMPLES "Build the KrakatoaSR examples" ON)
 
 add_library(krakatoasr ${KRAKATOASR_LIBRARY_TYPE})
 
@@ -49,7 +49,7 @@ find_package(Boost REQUIRED CONFIG)
 find_package(OpenEXR REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(TBB REQUIRED)
-find_package(xxHash REQUIRED)
+pkg_check_modules(XXHASH REQUIRED IMPORTED_TARGET libxxhash)
 find_package(OpenImageIO REQUIRED)
 
 target_link_libraries(krakatoasr
@@ -60,7 +60,7 @@ target_link_libraries(krakatoasr
         OpenEXR::OpenEXR
         ZLIB::ZLIB
         TBB::tbb
-        xxHash::xxHash
+        PkgConfig::XXHASH
         OpenImageIO::OpenImageIO
 )
 

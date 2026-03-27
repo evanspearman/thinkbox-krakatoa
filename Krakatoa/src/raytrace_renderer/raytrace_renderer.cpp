@@ -315,7 +315,7 @@ class raytrace_impl : public raytrace_renderer {
 
     virtual ~raytrace_impl() {}
 
-    virtual void add_render_element( krakatoa::render_element_interface_ptr renderElement ) {}
+    virtual void add_render_element( [[maybe_unused]] krakatoa::render_element_interface_ptr renderElement ) {}
 
     virtual void precompute_lighting() {}
 

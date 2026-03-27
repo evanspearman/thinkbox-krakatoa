@@ -4,7 +4,10 @@ if(POLICY CMP0167)
     cmake_policy(SET CMP0167 NEW)
 endif()
 
-project(Krakatoa LANGUAGES CXX)
+project(Krakatoa VERSION 0.1.0 LANGUAGES CXX)
+
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 
 add_library(krakatoa STATIC)
 
@@ -97,16 +100,44 @@ endif()
 target_precompile_headers(krakatoa PRIVATE stdafx.h)
 
 install(
+    TARGETS krakatoa
+    EXPORT krakatoaTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(
     DIRECTORY krakatoa
-    DESTINATION include
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING
         PATTERN "*.h"
         PATTERN "*.hpp"
 )
 
 install(
-    TARGETS krakatoa
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
+    EXPORT krakatoaTargets
+    FILE krakatoaTargets.cmake
+    NAMESPACE krakatoa::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/krakatoa
+)
+
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/krakatoaConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/krakatoaConfig.cmake"
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/krakatoa"
+)
+
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/krakatoaConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+install(
+    FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/krakatoaConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/krakatoaConfigVersion.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/krakatoa"
 )

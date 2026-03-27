@@ -59,7 +59,7 @@ class shadow_map_generator {
         : m_matteInterface( matteInterface ) {}
     virtual ~shadow_map_generator() {}
 
-    virtual void generate_shadow_map( const light_object& light, const scene_context_ptr context, float mblurTime,
+    virtual void generate_shadow_map( const light_object& light, [[maybe_unused]] const scene_context_ptr context, float mblurTime,
                                       frantic::graphics2d::framebuffer<float>& outDepthImg ) {
         m_matteInterface->generate_depth_map(
             static_cast<const frantic::rendering::lights::directedlight_interface&>( light.get_light_impl() )
@@ -67,7 +67,7 @@ class shadow_map_generator {
             mblurTime, outDepthImg, true );
     }
 
-    virtual void generate_shadow_map( const light_object& light, const scene_context_ptr context, float mblurTime,
+    virtual void generate_shadow_map( const light_object& light, [[maybe_unused]] const scene_context_ptr context, float mblurTime,
                                       frantic::rendering::framebuffer_cubeface<float>& outDepthImg ) {
         using namespace frantic::graphics;
         using namespace frantic::graphics2d;
