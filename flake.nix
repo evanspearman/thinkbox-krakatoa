@@ -47,6 +47,7 @@
           shellHook = ''
             export CC="${llvm.clang}/bin/clang"
             export CXX="${llvm.clang}/bin/clang++"
+            export CXXFLAGS="-fcolor-diagnostics"
           '';
         };
       }

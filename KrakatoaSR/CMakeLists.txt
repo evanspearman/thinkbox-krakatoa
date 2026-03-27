@@ -1,106 +1,147 @@
-# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: Apache-2.0
-cmake_minimum_required( VERSION 3.15 FATAL_ERROR )
+cmake_minimum_required(VERSION 3.20)
 
-project( KrakatoaSR )
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
 
-find_package( thinkboxcmlibrary REQUIRED )
-include( PrecompiledHeader )
-include( ThinkboxCMLibrary )
+project(KrakatoaSR LANGUAGES CXX)
 
-option( LIBRARY_TYPE "Either SHARED or STATIC" SHARED )
-option( BUILD_EXAMPLES "Build the KrakatoaSR examples" OFF )
+set(KRAKATOASR_LIBRARY_TYPE "SHARED" CACHE STRING "Either SHARED or STATIC")
+set_property(CACHE KRAKATOASR_LIBRARY_TYPE PROPERTY STRINGS SHARED STATIC)
 
-add_library( krakatoasr ${LIBRARY_TYPE} )
+option(BUILD_EXAMPLES "Build the KrakatoaSR examples" OFF)
 
-set_property( TARGET krakatoasr PROPERTY CXX_STANDARD 17 )
+add_library(krakatoasr ${KRAKATOASR_LIBRARY_TYPE})
 
-target_include_directories( krakatoasr PUBLIC
-                            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-                            $<INSTALL_INTERFACE:include>
+target_compile_features(krakatoasr PUBLIC cxx_std_17)
+
+set_target_properties(krakatoasr PROPERTIES
+    CXX_EXTENSIONS OFF
+    PROJECT_LABEL "KrakatoaSR"
 )
 
-file( GLOB_RECURSE H_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-	"include/*.h"
-	"include/*.hpp"
+target_include_directories(krakatoasr
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
 )
 
-file( GLOB_RECURSE CXX_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-	"src/*.cpp"
+file(GLOB_RECURSE KRAKATOASR_HEADERS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp"
 )
 
-target_sources( krakatoasr PRIVATE
-    stdafx.cpp
-    stdafx.h
-    ${H_FILES}
-    ${CXX_FILES}
+file(GLOB_RECURSE KRAKATOASR_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
 )
 
-if( ${LIBRARY_TYPE} STREQUAL "STATIC" )
-    target_compile_definitions( krakatoasr PUBLIC KSR_STATIC )
+target_sources(krakatoasr
+    PRIVATE
+        stdafx.cpp
+        stdafx.h
+        ${KRAKATOASR_HEADERS}
+        ${KRAKATOASR_SOURCES}
+)
+
+find_package(thinkboxlibrary REQUIRED CONFIG)
+find_package(krakatoa REQUIRED CONFIG)
+find_package(Boost REQUIRED CONFIG)
+find_package(OpenEXR REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(TBB REQUIRED)
+find_package(xxHash REQUIRED)
+find_package(OpenImageIO REQUIRED)
+
+target_link_libraries(krakatoasr
+    PUBLIC
+        thinkboxlibrary::thinkboxlibrary
+        krakatoa::krakatoa
+        Boost::boost
+        OpenEXR::OpenEXR
+        ZLIB::ZLIB
+        TBB::tbb
+        xxHash::xxHash
+        OpenImageIO::OpenImageIO
+)
+
+if(KRAKATOASR_LIBRARY_TYPE STREQUAL "STATIC")
+    target_compile_definitions(krakatoasr PUBLIC KSR_STATIC)
 else()
     # The Conan version of Boost was built with this, and it changes the library names.
     # As a result, we need to set this to tell Boost to look for the right libraries to
     # link against.
-    target_compile_definitions( krakatoasr PUBLIC BOOST_AUTO_LINK_SYSTEM )
-    if( APPLE )
-        set( PLATFORM_LINK_FLAGS "-Wl,-exported_symbols_list ${PROJECT_SOURCE_DIR}/KrakatoaSR.exp" )
-        target_link_libraries( krakatoasr "-framework CoreServices" )
-        target_link_libraries( krakatoasr "-framework CoreFoundation" )
-        target_link_libraries( krakatoasr "-framework IOKit" )
-    elseif( LINUX )
-        set( PLATFORM_LINK_FLAGS "-Wl,--version-script=${PROJECT_SOURCE_DIR}/KrakatoaSR.map -s" )
+    target_compile_definitions(krakatoasr PUBLIC BOOST_AUTO_LINK_SYSTEM)
+
+    if(APPLE)
+        target_link_libraries(krakatoasr PRIVATE
+            "-framework CoreServices"
+            "-framework CoreFoundation"
+            "-framework IOKit"
+        )
+
+        target_link_options(krakatoasr PRIVATE
+            "-Wl,-exported_symbols_list,${PROJECT_SOURCE_DIR}/KrakatoaSR.exp"
+        )
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        target_link_options(krakatoasr PRIVATE
+            "-Wl,--version-script=${PROJECT_SOURCE_DIR}/KrakatoaSR.map"
+            "-s"
+        )
     endif()
 endif()
 
-find_package( thinkboxlibrary REQUIRED )
-find_package( krakatoa REQUIRED )
-find_package( Boost REQUIRED )
-find_package( OpenEXR REQUIRED )
-find_package( ZLIB REQUIRED )
-find_package( TBB REQUIRED )
-find_package( xxHash REQUIRED )
-find_package( OpenImageIO REQUIRED )
+if(MSVC)
+    target_compile_options(krakatoasr PRIVATE /W4 /WX /MP)
 
-target_include_directories( krakatoasr PUBLIC ${thinkboxlibrary_INCLUDE_DIRS} )
-target_include_directories( krakatoasr PUBLIC ${krakatoa_INCLUDE_DIRS} )
-target_include_directories( krakatoasr PUBLIC ${Boost_INCLUDE_DIRS} )
-target_include_directories( krakatoasr PUBLIC ${OpenEXR_INCLUDE_DIRS} )
-target_include_directories( krakatoasr PUBLIC ${ZLIB_INCLUDE_DIRS} )
-target_include_directories( krakatoasr PUBLIC ${TBB_INCLUDE_DIRS} )
-target_include_directories( krakatoasr PUBLIC ${xxHash_INCLUDE_DIRS} )
-target_include_directories( krakatoasr PUBLIC ${OpenImageIO_INCLUDE_DIRS} )
+    target_compile_options(krakatoasr PRIVATE
+        "$<$<CONFIG:Release>:/O2>"
+        "$<$<CONFIG:RelWithDebInfo>:/Od>"
+    )
 
-target_link_libraries( krakatoasr PUBLIC thinkboxlibrary::thinkboxlibrary )
-target_link_libraries( krakatoasr PUBLIC krakatoa::krakatoa )
-target_link_libraries( krakatoasr PUBLIC Boost::Boost )
-target_link_libraries( krakatoasr PUBLIC OpenEXR::OpenEXR )
-target_link_libraries( krakatoasr PUBLIC ZLIB::ZLIB )
-target_link_libraries( krakatoasr PUBLIC TBB::tbb )
-target_link_libraries( krakatoasr PUBLIC xxHash::xxHash )
-target_link_libraries( krakatoasr PUBLIC OpenImageIO::OpenImageIO )
-
-frantic_common_platform_setup( krakatoasr )
-frantic_default_source_groups( krakatoasr HEADERDIR include SOURCEDIR src )
-
-add_precompiled_header( krakatoasr stdafx.h SOURCE_CXX stdafx.cpp )
-
-# Disable optimization for the RelWithDebInfo configuration on Windows.
-# This allows breakpoints to be hit reliably when debugging in Visual Studio.
-if( WIN32 )
-	target_compile_options( krakatoasr PRIVATE "$<$<CONFIG:Release>:/O2>$<$<CONFIG:RelWithDebInfo>:/Od>" )
+    target_compile_definitions(krakatoasr PRIVATE
+        _USE_MATH_DEFINES
+        _UNICODE
+        _CRT_SECURE_NO_WARNINGS
+    )
+else()
+    target_compile_options(krakatoasr PRIVATE -Wall -Wextra -Wpedantic -Werror -pthread)
 endif()
 
-if( BUILD_EXAMPLES )
-    add_subdirectory( Example )
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_compile_definitions(krakatoasr PRIVATE
+        LINUX=1
+        BOOST_FILESYSTEM_VERSION=3
+    )
 endif()
 
-install( DIRECTORY include
-         DESTINATION "include/.."
-         FILES_MATCHING PATTERN "*.hpp"
+if(UNIX)
+    target_compile_definitions(krakatoasr PRIVATE
+        _BOOL
+        REQUIRE_IOSTREAM
+    )
+
+    set_target_properties(krakatoasr PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+    )
+endif()
+
+target_precompile_headers(krakatoasr PRIVATE stdafx.h)
+
+if(BUILD_EXAMPLES)
+    add_subdirectory(Example)
+endif()
+
+install(
+    DIRECTORY include/
+    DESTINATION include
+    FILES_MATCHING
+        PATTERN "*.h"
+        PATTERN "*.hpp"
 )
-install( TARGETS krakatoasr
-         RUNTIME DESTINATION bin
-         LIBRARY DESTINATION lib
-         ARCHIVE DESTINATION lib
+
+install(
+    TARGETS krakatoasr
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
 )

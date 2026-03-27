@@ -6,19 +6,26 @@
 , pkg-config
 , thinkboxlibrary
 , boost
+, bzip2
+, eigen
+, glog
+, utf8cpp
+, xxHash
+, icu
 , zlib
 , tinyxml-2
 , openexr
 , tbb
+, libb2
 }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation {
   pname = "krakatoa";
   version = "0.1.0";
 
   inherit src;
 
-  sourceRoot = "${src.name}/Krakatoa";
+  sourceRoot = "source/Krakatoa";
 
   nativeBuildInputs = [
     cmake
@@ -34,6 +41,13 @@ stdenv.mkDerivation rec {
       tinyxml-2
       openexr
       tbb
+      libb2
+      bzip2
+      eigen
+      glog
+      utf8cpp
+      xxHash
+      icu
     ];
     
   cmakeFlags = [
