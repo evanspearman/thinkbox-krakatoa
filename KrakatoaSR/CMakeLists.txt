@@ -4,7 +4,10 @@ if(POLICY CMP0167)
     cmake_policy(SET CMP0167 NEW)
 endif()
 
-project(KrakatoaSR LANGUAGES CXX)
+project(KrakatoaSR VERSION 0.1.0 LANGUAGES CXX)
+
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 
 set(KRAKATOASR_LIBRARY_TYPE "SHARED" CACHE STRING "Either SHARED or STATIC")
 set_property(CACHE KRAKATOASR_LIBRARY_TYPE PROPERTY STRINGS SHARED STATIC)
@@ -23,7 +26,7 @@ set_target_properties(krakatoasr PROPERTIES
 target_include_directories(krakatoasr
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 file(GLOB_RECURSE KRAKATOASR_HEADERS CONFIGURE_DEPENDS
@@ -133,7 +136,7 @@ endif()
 
 install(
     DIRECTORY include/
-    DESTINATION include
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING
         PATTERN "*.h"
         PATTERN "*.hpp"
@@ -141,7 +144,35 @@ install(
 
 install(
     TARGETS krakatoasr
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
+    EXPORT krakatoasrTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(
+    EXPORT krakatoasrTargets
+    FILE krakatoasrTargets.cmake
+    NAMESPACE krakatoasr::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/krakatoasr
+)
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/krakatoasrConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/krakatoasrConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/krakatoasr
+)
+
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/krakatoasrConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+install(
+    FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/krakatoasrConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/krakatoasrConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/krakatoasr
 )

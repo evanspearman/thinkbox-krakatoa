@@ -1,0 +1,9 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+find_dependency(thinkboxlibrary CONFIG)
+find_dependency(krakatoa CONFIG)
+
+include("${CMAKE_CURRENT_LIST_DIR}/krakatoasrTargets.cmake")
+
