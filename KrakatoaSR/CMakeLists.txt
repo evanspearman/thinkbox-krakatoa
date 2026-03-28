@@ -56,7 +56,7 @@ pkg_check_modules(XXHASH REQUIRED IMPORTED_TARGET libxxhash)
 find_package(OpenImageIO REQUIRED)
 
 target_link_libraries(krakatoasr
-    PUBLIC
+    PRIVATE
         thinkboxlibrary::thinkboxlibrary
         krakatoa::krakatoa
         Boost::boost
